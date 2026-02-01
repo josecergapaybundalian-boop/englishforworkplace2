@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Final Examination - English for Workplace</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#ffffff;
+    color:#000000;
+    user-select:none;
+}
+@media print{
+    button,.timer{display:none}
+}
+
+.header{text-align:center;padding:20px}
+.header img{width:120px}
+
+.timer{text-align:center;font-size:22px;font-weight:bold;margin-bottom:10px}
+
+.container{
+    width:90%;
+    margin:auto;
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid #000;
+}
+
+table{width:100%;border-collapse:collapse;margin-bottom:20px}
+td{border:1px solid #000;padding:8px}
+input{width:96%;padding:6px}
+
+.question{
+    border:1px solid #000;
+    padding:12px;
+    margin-bottom:14px;
+    border-radius:8px;
+}
+
+.choice{
+    padding:6px;
+    margin:6px 0;
+    border:1px solid #000;
+    border-radius:5px;
+    cursor:pointer;
+}
+.choice.selected{background:#e6f2ff}
+.choice.correct{background:#d4edda}
+.choice.wrong{background:#f8d7da}
+
+.answer-review{
+    margin-top:8px;
+    padding:6px;
+    background:#f2f2f2;
+    border-radius:6px;
+    font-size:14px;
+}
+
+button{
+    padding:12px 24px;
+    font-size:16px;
+    border:1px solid #000;
+    border-radius:8px;
+    margin:10px;
+    cursor:pointer;
+    background:#fff;
+}
+
+/* === SECURITY WARNING OVERLAY === */
+#securityOverlay{
+    position:fixed;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.9);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    animation:blink 0.6s infinite;
+}
+
+#securityOverlay h1{
+    color:#fff;
+    font-size:38px;
+    text-align:center;
+}
+
+@keyframes blink{
+    0%{opacity:1;}
+    50%{opacity:0.2;}
+    100%{opacity:1;}
+}
+
+/* Freeze exam */
+.freeze *{
+    pointer-events:none !important;
+}
+
+#result{text-align:center;font-size:18px;margin-top:20px}
+</style>
+</head>
+
+<body
+oncopy="return false"
+oncut="return false"
+onpaste="return false"
+oncontextmenu="return false"
+onselectstart="return false">
+
+<div class="header">
+    <h1>FINAL EXAMINATION</h1>
+    <h2>English for Workplace</h2>
+</div>
+
+<div class="timer" id="timer">Time Remaining: 60:00</div>
+
+<div class="container">
+
+<table>
+<tr><td>Student Name</td><td><input></td></tr>
+<tr><td>Student ID</td><td><input></td></tr>
+<tr><td>Department</td><td><input></td></tr>
+<tr><td>Teacher</td><td><input></td></tr>
+</table>
+
+<div id="questions"></div>
+
+<div style="text-align:center">
+<button onclick="submitExam()">Submit Examination</button>
+<button onclick="window.print()">Save PDF</button>
+</div>
+
+<div id="result"></div>
+</div>
+
+<script>
+let timeLeft=3600;
+setInterval(()=>{
+    let m=Math.floor(timeLeft/60);
+    let s=timeLeft%60;
+    document.getElementById("timer").textContent=
+    `Time Remaining: ${m}:${s.toString().padStart(2,"0")}`;
+    if(timeLeft>0) timeLeft--;
+},1000);
+
+const questions=[
+{q:"1. A workplace is a place where people ______.",o:["relax","work","travel"],c:1},
+{q:"2. Which room is usually used for meetings?",o:["Meeting room","Pantry","Parking lot"],c:0},
+{q:"3. The main purpose of a workplace is to ______.",o:["sell food","study","do jobs"],c:2},
+{q:"4. Which person manages a team?",o:["Customer","Manager","Visitor"],c:1},
+{q:"5. A company chart shows ______.",o:["job positions","salaries","holidays"],c:0},
+{q:"6. The reception area is where ______.",o:["employees sleep","guests are welcomed","products are made"],c:1},
+{q:"7. Wearing proper uniform shows ______.",o:["professionalism","laziness","anger"],c:0},
+{q:"8. Which place is part of an office?",o:["Classroom","Kitchen","Desk area"],c:2},
+{q:"9. Office rules help employees to ______.",o:["argue","work better","arrive late"],c:1},
+{q:"10. A workplace can be a ______.",o:["factory","cinema only","playground"],c:0},
+{q:"11. Employees should keep the workplace ______.",o:["noisy","messy","clean"],c:2},
+{q:"12. A notice board is used to ______.",o:["play games","share information","cook food"],c:1},
+{q:"13. Safety signs are important to ______.",o:["decorate","warn people","confuse staff"],c:1},
+{q:"14. Colleagues are people who ______.",o:["work together","live together","study together"],c:0},
+{q:"15. A professional workplace is usually ______.",o:["organized","careless","noisy"],c:0},
+{q:"16. A job responsibility means what you ______.",o:["like","wear","must do"],c:2},
+{q:"17. A receptionist usually ______.",o:["answers phone calls","repairs machines","cooks food"],c:0},
+{q:"18. A manager is responsible for ______.",o:["cleaning only","planning and leading","delivering letters"],c:1},
+{q:"19. An employee should ______ instructions.",o:["ignore","follow","delete"],c:1},
+{q:"20. Who serves customers in a store?",o:["Cashier","Engineer","Guard"],c:0},
+{q:"21. Being responsible means ______.",o:["blaming others","doing your duty","coming late"],c:1},
+{q:"22. A cleaner’s job is to ______.",o:["supervise staff","maintain cleanliness","sell products"],c:1},
+{q:"23. Teamwork means ______.",o:["working alone","working together","working slowly"],c:1},
+{q:"24. A job description explains ______.",o:["salary only","personal life","duties and tasks"],c:2},
+{q:"25. Employees should be ______ at work.",o:["honest","careless","rude"],c:0},
+{q:"26. A supervisor checks ______.",o:["movies","work performance","lunch menus"],c:1},
+{q:"27. Being punctual means being ______.",o:["late","early or on time","absent"],c:1},
+{q:"28. Who fixes technical problems?",o:["Technician","Receptionist","Customer"],c:0},
+{q:"29. Responsibility at work includes ______.",o:["gossiping","avoiding tasks","completing tasks"],c:2},
+{q:"30. A promotion usually means ______.",o:["more duties","fewer duties","no change"],c:0},
+{q:"31. Internal communication happens ______ a company.",o:["outside","inside","online only"],c:1},
+{q:"32. Emails are used to ______ information.",o:["hide","share","erase"],c:1},
+{q:"33. A meeting is held to ______.",o:["sleep","discuss issues","eat together"],c:1},
+{q:"34. Good communication helps to avoid ______.",o:["teamwork","mistakes","success"],c:1},
+{q:"35. A memo is usually ______.",o:["informal chat","written notice","phone call"],c:1},
+{q:"36. Listening is an important ______.",o:["food","communication skill","rule"],c:1},
+{q:"37. Feedback helps employees to ______.",o:["improve","complain","quit"],c:0},
+{q:"38. Clear messages are ______ to understand.",o:["hard","easy","useless"],c:1},
+{q:"39. Which is an example of internal communication?",o:["Staff meeting","TV advertisement","Customer review"],c:0},
+{q:"40. Employees should speak ______ to coworkers.",o:["politely","angrily","loudly"],c:0},
+{q:"41. Written communication includes ______.",o:["emails","gestures","facial expressions"],c:0},
+{q:"42. Miscommunication can cause ______.",o:["problems","solutions","promotions"],c:0},
+{q:"43. A notice from HR is usually ______.",o:["external","personal","internal"],c:2},
+{q:"44. Good communication builds ______.",o:["trust","fear","confusion"],c:0},
+{q:"45. Asking questions helps to ______.",o:["clarify information","waste time","argue"],c:0},
+{q:"46. When answering the phone, you should sound ______.",o:["bored","polite","angry"],c:1},
+{q:"47. The first thing to say on a business call is ______.",o:["Goodbye","Hold on","Greeting"],c:2},
+{q:"48. “May I speak to…?” is used to ______.",o:["request a person","end a call","complain"],c:0},
+{q:"49. If you don’t understand, ask the caller to ______.",o:["hang up","repeat","wait forever"],c:1},
+{q:"50. Taking messages is part of ______.",o:["telephoning skills","writing skills","cooking skills"],c:0},
+{q:"51. You should speak ______ on the phone.",o:["clearly","quietly","carelessly"],c:0},
+{q:"52. When transferring a call, you should ______.",o:["shout","inform the caller","disconnect"],c:1},
+{q:"53. “Please hold” means ______.",o:["wait","speak louder","hang up"],c:0},
+{q:"54. A professional phone call should be ______.",o:["long","confusing","polite"],c:2},
+{q:"55. Writing down details helps avoid ______.",o:["mistakes","calls","greetings"],c:0},
+{q:"56. Who usually answers office calls?",o:["Receptionist","Cleaner","Customer"],c:0},
+{q:"57. Ending a call politely shows ______.",o:["rudeness","professionalism","boredom"],c:1},
+{q:"58. Background noise should be ______.",o:["increased","ignored","minimized"],c:2},
+{q:"59. Before hanging up, you should ______.",o:["check understanding","shout goodbye","stay silent"],c:0},
+{q:"60. Telephoning skills are important for ______.",o:["communication","sleeping","exercising"],c:0}
+];
+
+const qDiv=document.getElementById("questions");
+let answers=new Array(questions.length).fill(null);
+
+questions.forEach((q,i)=>{
+    let box=document.createElement("div");
+    box.className="question";
+    box.innerHTML=`<b>${q.q}</b><br>`;
+    q.o.forEach((opt,idx)=>{
+        let d=document.createElement("div");
+        d.className="choice";
+        d.textContent=`${String.fromCharCode(65+idx)}. ${opt}`;
+        d.onclick=()=>{
+            if(answers[i]!==null) return;
+            answers[i]=idx;
+            d.classList.add("selected");
+        };
+        box.appendChild(d);
+    });
+    qDiv.appendChild(box);
+});
+
+function submitExam(){
+    let score=0;
+    answers.forEach((a,i)=>{
+        const box=qDiv.children[i];
+        const correct=questions[i].c;
+        const choices=box.querySelectorAll(".choice");
+
+        if(a===correct){
+            score++;
+            choices[a].classList.add("correct");
+        }else{
+            if(a!==null) choices[a].classList.add("wrong");
+            choices[correct].classList.add("correct");
+        }
+
+        box.innerHTML+=`
+        <div class="answer-review">
+        <b>Your Answer:</b> ${a!==null?questions[i].o[a]:"No Answer"}<br>
+        <b>Correct Answer:</b> ${questions[i].o[correct]}
+        </div>`;
+    });
+
+    document.getElementById("result").innerHTML=`
+    <h3>EXAM RESULT</h3>
+    Raw Score: ${score}/60<br>
+    20% Equivalent: ${(score/60*20).toFixed(2)}
+    `;
+}
+</script>
+<script>
+/* ===============================
+   STRICT EXAM SECURITY SYSTEM
+================================ */
+
+// Prevent refresh / close
+window.addEventListener("beforeunload", function (e) {
+    e.preventDefault();
+    e.returnValue = "Exam in progress. Leaving will submit your exam.";
+});
+
+// Disable copy, paste, cut, right-click
+["copy","paste","cut","contextmenu"].forEach(event=>{
+    document.addEventListener(event,e=>{
+        e.preventDefault();
+        alert("Action disabled during examination.");
+    });
+});
+
+// Disable text selection
+document.addEventListener("selectstart", e => e.preventDefault());
+
+// Detect Print Screen (PC)
+document.addEventListener("keyup", function (e) {
+    if (e.key === "PrintScreen" || e.keyCode === 44) {
+        securityViolation("Screenshot detected!");
+    }
+});
+
+// Detect Ctrl shortcuts
+document.addEventListener("keydown", function(e){
+    if (
+        e.ctrlKey &&
+        ["c","v","x","p","s","u"].includes(e.key.toLowerCase())
+    ) {
+        e.preventDefault();
+        securityViolation("Restricted keyboard shortcut!");
+    }
+});
+
+// Detect tab switch / minimize (PC & Mobile)
+let examLocked = false;
+
+function securityViolation(message){
+    if(examLocked) return;
+    examLocked = true;
+
+    alert(message + "\nYour exam will be submitted.");
+
+    submitExam(); // auto-submit
+}
+
+// Detect tab switching
+document.addEventListener("visibilitychange", function(){
+    if (document.hidden) {
+        securityViolation("You left the exam window!");
+    }
+});
+
+// Detect window blur (Alt+Tab / app switch)
+window.addEventListener("blur", function(){
+    securityViolation("Exam window lost focus!");
+});
+
+
+</script>
+<audio id="alarmSound" loop>
+    <source src="https://www.soundjay.com/buttons/sounds/beep-07.mp3" type="audio/mpeg">
+</audio>
+
+<div id="securityOverlay">
+    <h1>⚠ EXAM VIOLATION DETECTED ⚠<br>
+    SCREENSHOT IS NOT ALLOWED</h1>
+</div>
+<script>
+/* ===============================
+   MAXIMUM EXAM SECURITY SYSTEM
+================================ */
+
+let examFrozen = false;
+
+function freezeExam(reason){
+    if(examFrozen) return;
+    examFrozen = true;
+
+    // Freeze UI
+    document.body.classList.add("freeze");
+
+    // Show blinking warning
+    document.getElementById("securityOverlay").style.display="flex";
+
+    // Alert backup
+    alert(reason + "\nExam will be submitted automatically.");
+
+    // Auto submit after 3 seconds
+    setTimeout(()=>{
+        submitExam();
+    },3000);
+}
+
+/* BLOCK LEAVING */
+window.addEventListener("beforeunload",e=>{
+    e.preventDefault();
+    e.returnValue="";
+});
+
+/* SCREENSHOT DETECTION (PC) */
+document.addEventListener("keyup",e=>{
+    if(e.key==="PrintScreen"||e.keyCode===44){
+        freezeExam("Screenshot detected!");
+    }
+});
+
+/* TAB SWITCH / APP SWITCH */
+document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){
+        freezeExam("You left the exam window!");
+    }
+});
+
+window.addEventListener("blur",()=>{
+    freezeExam("Exam window lost focus!");
+});
+
+/* KEYBOARD SHORTCUTS */
+document.addEventListener("keydown",e=>{
+    if(
+        e.ctrlKey &&
+        ["c","v","x","p","s","u"].includes(e.key.toLowerCase())
+    ){
+        e.preventDefault();
+        freezeExam("Restricted key pressed!");
+    }
+});
+
+/* COPY / PASTE / RIGHT CLICK */
+["copy","paste","cut","contextmenu"].forEach(evt=>{
+    document.addEventListener(evt,e=>{
+        e.preventDefault();
+        freezeExam("Restricted action detected!");
+    });
+});
+
+</script>
+
+</body>
+</html>
